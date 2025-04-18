@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+// import { useNavigate } from "react-router-dom";
 import Navigation from "../components/Navigation";
 import Header from "../components/Header";
 import ShortURL from "../components/ShortURL";
@@ -11,14 +11,14 @@ export default function Home() {
   const [selectedPage, setSelectedPage] = useState("ShortURL");
   const [isFullscreen, setIsFullscreen] = useState(false);
 
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
 
-  useEffect(() => {
-    const isAuthenticated = localStorage.getItem("isAuthenticated");
-    if (!isAuthenticated) {
-      navigate("/login");
-    }
-  }, [navigate]);
+  // useEffect(() => {
+  //   const isAuthenticated = localStorage.getItem("isAuthenticated");
+  //   if (!isAuthenticated) {
+  //     navigate("/login");
+  //   }
+  // }, [navigate]);
 
   const renderContent = () => {
     switch (selectedPage) {
