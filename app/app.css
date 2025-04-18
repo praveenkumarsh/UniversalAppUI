@@ -13,3 +13,11 @@ body {
     color-scheme: dark;
   }
 }
+
+header {
+  background-color: var(--header-bg-color);
+}
+
+:root {
+  --header-bg-color: #373af3; /* Tailwind's emerald-500 */
+}
