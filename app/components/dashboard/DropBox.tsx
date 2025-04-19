@@ -10,7 +10,7 @@ import {
   Folder,
   Vault,
 } from "lucide-react";
-import { useTheme } from "../context/ThemeContext";
+import { useTheme } from "../../context/ThemeContext";
 
 const files = [
   { name: "Attachments", modified: "9/13/2017", size: "", type: "folder" },

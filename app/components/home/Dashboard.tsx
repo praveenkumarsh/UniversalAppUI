@@ -1,8 +1,8 @@
 import React from "react";
-import ShortURL from "../components/ShortURL";
-import DropBox from "../components/DropBox";
-import Chat from "../components/Chat";
-import PasteBin from "../components/PasteBin";
+import ShortURL from "../dashboard/ShortURL";
+import DropBox from "../dashboard/DropBox";
+import Chat from "../dashboard/Chat";
+import PasteBin from "../dashboard/PasteBin";
 
 type Props = {
   selectedApp: { name: string; icon: string } | null;

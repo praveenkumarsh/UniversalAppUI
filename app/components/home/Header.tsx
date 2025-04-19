@@ -1,4 +1,4 @@
-import { useTheme } from "./../context/ThemeContext"; // Custom hook to access theme context
+import { useTheme } from "../../context/ThemeContext"; // Custom hook to access theme context
 import { Sun, Moon } from "lucide-react"; // Icon for dark/light mode toggle
 
 interface HeaderProps {

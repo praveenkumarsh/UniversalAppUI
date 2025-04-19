@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import { Header } from "../components/Header";
-import { AppSelector } from "../components/AppSelector";
-import Dashboard from "../components/Dashboard";
+import { Header } from "./home/Header";
+import { AppSelector } from "./helpers/AppSelector";
+import Dashboard from "./home/Dashboard";
 
 const Home: React.FC = () => {
   const [showAppSelector, setShowAppSelector] = useState(false);
