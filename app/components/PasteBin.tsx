@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
+import { useTheme } from "../context/ThemeContext";
 
 export default function PasteBin() {
+  const { theme } = useTheme();
   const [pasteText, setPasteText] = useState("");
   const [pasteLink, setPasteLink] = useState("");
   const [error, setError] = useState("");
@@ -10,7 +12,6 @@ export default function PasteBin() {
   const [fileName, setFileName] = useState("My script.php");
   const [pastes, setPastes] = useState([]);
 
-  // Mock JSON load
   useEffect(() => {
     const mockPastes = [
       {
@@ -47,8 +48,6 @@ export default function PasteBin() {
     setError("");
     const pasteId = Math.random().toString(36).substring(2, 10);
     const newLink = `https://paste.ly/${pasteId}`;
-    setPasteLink(newLink);
-
     const newPaste = {
       id: pasteId,
       text: pasteText,
@@ -61,137 +60,134 @@ export default function PasteBin() {
     };
 
     setPastes([newPaste, ...pastes]);
+    setPasteLink(newLink);
     setPasteText("");
   };
 
+  const isDark = theme === "dark";
+
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col">
+    <div className={`min-h-screen flex flex-col ${isDark ? "bg-gray-900 text-gray-100" : "bg-white text-gray-900"}`}>
       <main className="flex flex-1 overflow-hidden">
-        {/* Left: Paste Form */}
-        <div className="w-2/3 px-6 py-4 flex flex-col">
+        {/* Left Panel */}
+        <div className="w-2/3 px-8 py-6 flex flex-col gap-6">
           <textarea
             value={pasteText}
             onChange={(e) => setPasteText(e.target.value)}
             placeholder={`<?php\n  echo 'PasteBin is pretty sweet';\n?>`}
-            className="flex-1 bg-gray-900 text-white border border-gray-700 rounded-md p-4 text-sm font-mono resize-none focus:outline-none focus:ring-2 focus:ring-emerald-500 overflow-auto"
+            className={`h-80 border rounded-2xl p-4 text-sm font-mono resize-none focus:outline-none focus:ring-2 ${
+              isDark
+                ? "bg-gray-800 text-white border-gray-700 focus:ring-emerald-600"
+                : "bg-gray-100 text-gray-800 border-gray-300 focus:ring-emerald-500"
+            }`}
           />
 
           {/* Options */}
-          <div className="mt-4 bg-gray-900 border border-gray-700 rounded-md p-4">
-            <h3 className="text-md font-semibold mb-4 text-gray-300">↑ Options</h3>
+          <div className={`rounded-2xl p-4 ${isDark ? "bg-gray-800 border border-gray-700" : "bg-gray-100 border border-gray-300"}`}>
+            <h3 className={`text-sm font-semibold mb-4 ${isDark ? "text-gray-300" : "text-gray-700"}`}>Paste Options</h3>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
+              {[
+                { label: "Expiry", value: expiry, onChange: setExpiry, options: ["Never", "10 Minutes", "1 Hour", "1 Day", "1 Week"] },
+                { label: "Privacy", value: privacy, onChange: setPrivacy, options: ["Public", "Unlisted", "Private"] },
+                { label: "Syntax", value: syntax, onChange: setSyntax, options: ["PHP", "JavaScript", "Python", "Java", "Plain Text"] },
+              ].map(({ label, value, onChange, options }) => (
+                <div key={label}>
+                  <label className={`block mb-1 ${isDark ? "text-gray-400" : "text-gray-600"}`}>{label}</label>
+                  <select
+                    value={value}
+                    onChange={(e) => onChange(e.target.value)}
+                    className={`w-full border rounded-md p-2 ${
+                      isDark
+                        ? "bg-gray-900 text-white border-gray-700"
+                        : "bg-white text-gray-800 border-gray-300"
+                    }`}
+                  >
+                    {options.map((opt) => (
+                      <option key={opt}>{opt}</option>
+                    ))}
+                  </select>
+                </div>
+              ))}
               <div>
-                <label className="block mb-1 text-gray-400">Expiry</label>
-                <select
-                  value={expiry}
-                  onChange={(e) => setExpiry(e.target.value)}
-                  className="w-full bg-gray-800 text-white border border-gray-600 rounded-md p-2"
-                >
-                  <option>Never</option>
-                  <option>10 Minutes</option>
-                  <option>1 Hour</option>
-                  <option>1 Day</option>
-                  <option>1 Week</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block mb-1 text-gray-400">Privacy</label>
-                <select
-                  value={privacy}
-                  onChange={(e) => setPrivacy(e.target.value)}
-                  className="w-full bg-gray-800 text-white border border-gray-600 rounded-md p-2"
-                >
-                  <option>Public</option>
-                  <option>Unlisted</option>
-                  <option>Private</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block mb-1 text-gray-400">Syntax</label>
-                <select
-                  value={syntax}
-                  onChange={(e) => setSyntax(e.target.value)}
-                  className="w-full bg-gray-800 text-white border border-gray-600 rounded-md p-2"
-                >
-                  <option>PHP</option>
-                  <option>JavaScript</option>
-                  <option>Python</option>
-                  <option>Java</option>
-                  <option>Plain Text</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block mb-1 text-gray-400">File Name</label>
+                <label className={`block mb-1 ${isDark ? "text-gray-400" : "text-gray-600"}`}>File Name</label>
                 <input
                   type="text"
                   value={fileName}
                   onChange={(e) => setFileName(e.target.value)}
-                  className="w-full bg-gray-800 text-white border border-gray-600 rounded-md p-2"
+                  className={`w-full border rounded-md p-2 ${
+                    isDark ? "bg-gray-900 text-white border-gray-700" : "bg-white text-gray-800 border-gray-300"
+                  }`}
                 />
               </div>
             </div>
           </div>
 
-          {/* Submit Button */}
-          <div className="mt-4">
+          {/* Submit + Link */}
+          <div>
             {error && <p className="text-red-500 text-sm mb-2">{error}</p>}
             <button
               onClick={handleGeneratePaste}
-              className="bg-white text-black px-6 py-2 rounded-md hover:bg-gray-200 text-sm font-semibold"
+              className="bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-2 rounded-xl transition text-sm font-semibold"
             >
-              Submit
+              Create Paste
             </button>
-          </div>
 
-          {/* Paste Link */}
-          {pasteLink && (
-            <div className="mt-4 text-sm">
-              <p className="text-gray-400 mb-1">Your Paste Link:</p>
-              <a
-                href={pasteLink}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-emerald-400 underline break-all"
-              >
-                {pasteLink}
-              </a>
-            </div>
-          )}
+            {pasteLink && (
+              <div className="mt-4 text-sm">
+                <p className={`${isDark ? "text-gray-300" : "text-gray-600"} mb-1`}>Your Paste Link:</p>
+                <a
+                  href={pasteLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-emerald-400 underline break-all"
+                >
+                  {pasteLink}
+                </a>
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Right: Paste List */}
-        <div className="w-1/3 px-4 py-4 border-l border-gray-700 bg-gray-950 overflow-y-auto">
-          <h3 className="text-md font-semibold text-gray-300 mb-4">📜 All Pastes</h3>
+        {/* Right Panel */}
+        <div className={`w-1/3 px-6 py-6 overflow-y-auto border-l ${isDark ? "bg-gray-800 border-gray-700" : "bg-gray-50 border-gray-200"}`}>
+          <h3 className={`text-md font-semibold mb-4 ${isDark ? "text-gray-100" : "text-gray-700"}`}>📜 Recent Pastes</h3>
           {pastes.length > 0 ? (
             <ul className="space-y-3 text-sm">
               {pastes.map((paste) => (
-                <li key={paste.id} className="border border-gray-700 rounded-md p-3 bg-gray-800">
+                <li
+                  key={paste.id}
+                  className={`rounded-2xl p-4 shadow-sm ${
+                    isDark ? "bg-gray-700 text-gray-100 border border-gray-600" : "bg-white text-gray-900 border border-gray-200"
+                  }`}
+                >
                   <div className="flex justify-between items-center mb-1">
-                    <span className="text-gray-300">{paste.fileName}</span>
-                    <span className="text-gray-500 text-xs">{paste.createdAt}</span>
+                    <span className="font-medium">{paste.fileName}</span>
+                    <span className="text-xs opacity-70">{paste.createdAt}</span>
                   </div>
                   <div className="text-emerald-400 truncate">
-                    <a href={paste.link} target="_blank" rel="noopener noreferrer">
+                    <a
+                      href={paste.link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="hover:underline"
+                    >
                       {paste.link}
                     </a>
                   </div>
-                  <div className="text-gray-400 text-xs mt-1">
-                    {paste.syntax} | {paste.privacy} | Expires: {paste.expiry}
+                  <div className="text-xs mt-1 opacity-70">
+                    {paste.syntax} • {paste.privacy} • Expires: {paste.expiry}
                   </div>
                 </li>
               ))}
             </ul>
           ) : (
-            <p className="text-gray-500">No pastes available.</p>
+            <p className={`${isDark ? "text-gray-400" : "text-gray-500"}`}>No pastes available.</p>
           )}
         </div>
       </main>
 
-      <footer className="px-6 py-4 text-center text-xs text-gray-500 border-t border-gray-700">
-        © {new Date().getFullYear()} PasteBin UI Clone. For demo purposes only.
+      <footer className={`px-6 py-4 text-center text-xs border-t ${isDark ? "text-gray-500 border-gray-700" : "text-gray-500 border-gray-200"}`}>
+        © {new Date().getFullYear()} PasteBin UI Clone. Demo only.
       </footer>
     </div>
   );

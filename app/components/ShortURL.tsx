@@ -1,148 +1,118 @@
-import { useState, useEffect } from "react";
+import React, { useState } from "react";
 
 export default function ShortURL() {
-  const [originalUrl, setOriginalUrl] = useState("");
-  const [shortUrl, setShortUrl] = useState("");
+  const [longUrl, setLongUrl] = useState("");
+  const [customAlias, setCustomAlias] = useState("");
+  const [shortLink, setShortLink] = useState("");
   const [error, setError] = useState("");
-  const [urlList, setUrlList] = useState([]);
-
-  // Simulate fetching from JSON
-  useEffect(() => {
-    const mockShortUrls = [
-      {
-        id: "abc123",
-        original: "https://www.google.com",
-        short: "https://short.ly/abc123",
-        createdAt: "2025-04-01 10:30 AM",
-      },
-      {
-        id: "xyz456",
-        original: "https://www.github.com",
-        short: "https://short.ly/xyz456",
-        createdAt: "2025-04-14 6:12 PM",
-      },
-    ];
-    setUrlList(mockShortUrls);
-  }, []);
-
-  const isValidUrl = (url: string) => {
-    try {
-      const parsed = new URL(url);
-      return ["http:", "https:"].includes(parsed.protocol);
-    } catch (_) {
-      return false;
-    }
-  };
+  const [recentUrls, setRecentUrls] = useState<
+    { id: string; short: string; long: string; createdAt: string }[]
+  >([]);
 
   const handleShorten = () => {
-    if (!originalUrl.trim()) {
-      setError("Please enter a URL.");
-      setShortUrl("");
-      return;
-    }
-
-    if (!isValidUrl(originalUrl)) {
-      setError("Please enter a valid URL including http:// or https://");
-      setShortUrl("");
+    if (!longUrl.trim()) {
+      setError("Long URL cannot be empty.");
+      setShortLink("");
       return;
     }
 
     setError("");
-    const randomSlug = Math.random().toString(36).substring(2, 8);
-    const short = `https://short.ly/${randomSlug}`;
-    setShortUrl(short);
-
+    const id = customAlias.trim() || Math.random().toString(36).substring(2, 8);
+    const newShort = `https://tinyurl.com/${id}`;
     const newEntry = {
-      id: randomSlug,
-      original: originalUrl,
-      short,
+      id,
+      short: newShort,
+      long: longUrl,
       createdAt: new Date().toLocaleString(),
     };
 
-    setUrlList((prev) => [newEntry, ...prev]);
-    setOriginalUrl("");
+    setRecentUrls([newEntry, ...recentUrls]);
+    setShortLink(newShort);
+    setLongUrl("");
+    setCustomAlias("");
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-white dark:bg-gray-950 text-gray-900 dark:text-white">
-      <main className="flex flex-1">
-        {/* Form Area */}
-        <div className="w-2/3 flex items-center justify-center px-6 py-10">
-          <div className="w-full max-w-xl p-6 rounded-lg shadow-md bg-white dark:bg-gray-900">
-            <h2 className="text-3xl font-bold mb-6 text-emerald-600 text-center">
-              Shorten Your URL
-            </h2>
-
+    <div className="min-h-screen bg-gradient-to-br from-[#002848] to-[#1BA6C7] text-white flex flex-col">
+      <main className="flex flex-1 overflow-hidden">
+        {/* Left Panel */}
+        <div className="w-2/3 px-8 py-6 flex flex-col gap-6">
+          <div className="bg-white text-black rounded-2xl p-6 shadow-lg">
+            <h2 className="text-xl font-bold mb-4">🔗 Shorten a Long URL</h2>
             <input
+              value={longUrl}
+              onChange={(e) => setLongUrl(e.target.value)}
               type="text"
-              placeholder="Enter your long URL here"
-              value={originalUrl}
-              onChange={(e) => setOriginalUrl(e.target.value)}
-              className="w-full p-3 border border-gray-300 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:bg-gray-800 dark:text-white"
+              placeholder="Paste your long URL here..."
+              className="w-full border border-gray-300 p-3 rounded-lg mb-4 text-sm"
             />
-
-            {error && <p className="text-red-500 mt-2 text-sm">{error}</p>}
-
+            <div className="flex items-center gap-4 mb-4">
+              <span className="text-sm text-gray-600 font-medium">tinyurl.com/</span>
+              <input
+                value={customAlias}
+                onChange={(e) => setCustomAlias(e.target.value)}
+                type="text"
+                placeholder="custom-alias"
+                className="flex-1 border border-gray-300 p-2 rounded-md text-sm"
+              />
+            </div>
+            {error && <p className="text-red-600 text-sm mb-2">{error}</p>}
             <button
               onClick={handleShorten}
-              className="mt-4 w-full bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-3 rounded-md transition text-lg font-medium"
+              className="bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-2 rounded-xl text-sm font-semibold"
             >
-              Shorten
+              Shorten URL
             </button>
 
-            {shortUrl && (
-              <div className="mt-6 text-center">
-                <p className="text-gray-700 dark:text-gray-300">Shortened URL:</p>
+            {shortLink && (
+              <div className="mt-4 text-sm">
+                <p className="text-gray-700 mb-1">Your Short URL:</p>
                 <a
-                  href={shortUrl}
+                  href={shortLink}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-emerald-600 underline break-all"
                 >
-                  {shortUrl}
+                  {shortLink}
                 </a>
               </div>
             )}
           </div>
         </div>
 
-        {/* Right-Side List */}
-        <div className="w-1/3 border-l border-gray-300 dark:border-gray-700 px-4 py-6 bg-gray-50 dark:bg-gray-950 overflow-y-auto max-h-[calc(100vh-120px)]">
-          <h3 className="text-md font-semibold text-gray-800 dark:text-gray-300 mb-4">
-            🔗 Shortened URLs
-          </h3>
-          {urlList.length > 0 ? (
+        {/* Right Panel - Recent URLs */}
+        <div className="w-1/3 px-6 py-6 border-l border-white/20 bg-white/10 overflow-y-auto">
+          <h3 className="text-md font-semibold text-white mb-4">🕘 Recent Shortened URLs</h3>
+          {recentUrls.length > 0 ? (
             <ul className="space-y-3 text-sm">
-              {urlList.map((url) => (
+              {recentUrls.map((url) => (
                 <li
                   key={url.id}
-                  className="border border-gray-300 dark:border-gray-700 rounded-md p-3 bg-white dark:bg-gray-900"
+                  className="border border-white/20 rounded-2xl p-4 bg-white/10 backdrop-blur-md shadow-sm"
                 >
-                  <div className="text-gray-600 dark:text-gray-400 text-xs mb-1">
-                    {url.createdAt}
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="text-white font-medium truncate">{url.short}</span>
+                    <span className="text-white/60 text-xs">{url.createdAt}</span>
                   </div>
-                  <div className="text-gray-800 dark:text-white truncate">
-                    Original:{" "}
-                    <span className="block text-blue-500 truncate">
-                      {url.original}
-                    </span>
-                  </div>
-                  <div className="text-emerald-500 truncate mt-1">
-                    <a href={url.short} target="_blank" rel="noopener noreferrer">
-                      {url.short}
-                    </a>
-                  </div>
+                  <a
+                    href={url.long}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-emerald-300 text-xs truncate hover:underline"
+                  >
+                    {url.long}
+                  </a>
                 </li>
               ))}
             </ul>
           ) : (
-            <p className="text-gray-500 dark:text-gray-500">No URLs yet.</p>
+            <p className="text-white/70 text-sm">No shortened URLs yet.</p>
           )}
         </div>
       </main>
 
-      <footer className="p-4 text-center text-sm text-gray-500 dark:text-gray-400 border-t border-gray-200 dark:border-gray-800">
-        © {new Date().getFullYear()} ShortURL. All rights reserved.
+      <footer className="px-6 py-4 text-center text-xs text-white/60 border-t border-white/20">
+        © {new Date().getFullYear()} TinyURL UI Clone. Demo only.
       </footer>
     </div>
   );

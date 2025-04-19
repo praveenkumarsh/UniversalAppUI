@@ -1,23 +1,19 @@
 @import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-@theme {
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif,
-    "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+/* Add global styles for dark and light themes */
+html {
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-html,
 body {
-  @apply bg-white dark:bg-gray-950;
-
-  @media (prefers-color-scheme: dark) {
-    color-scheme: dark;
-  }
+  background-color: #ffffff; /* Light theme */
+  color: #000000; /* Light theme */
 }
 
-header {
-  background-color: var(--header-bg-color);
-}
-
-:root {
-  --header-bg-color: #373af3; /* Tailwind's emerald-500 */
+html.dark body {
+  background-color: #1a202c; /* Dark theme */
+  color: #e2e8f0; /* Dark theme */
 }
