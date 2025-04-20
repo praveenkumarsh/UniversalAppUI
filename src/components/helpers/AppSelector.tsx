@@ -7,6 +7,7 @@ interface AppSelectorProps {
   onSelect: (app: typeof apps[number]) => void;
 }
 
+
 export const AppSelector: React.FC<AppSelectorProps> = ({ isOpen, onSelect }) => {
   if (!isOpen) return null;
 

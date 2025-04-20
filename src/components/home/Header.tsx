@@ -39,7 +39,7 @@ export const Header: React.FC<HeaderProps> = ({ onToggleAppSelector, selectedApp
         </span>
       </div>
       <div className="flex items-center gap-4">
-        {/* <button
+        <button
           onClick={() => {
             console.log("Button clicked");
             toggleTheme}
@@ -48,7 +48,7 @@ export const Header: React.FC<HeaderProps> = ({ onToggleAppSelector, selectedApp
         >
           {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
           <span className="text-sm">{theme === "dark" ? "Light Mode" : "Dark Mode"}</span>
-        </button> */}
+        </button>
         <button className="hover:text-blue-500">🔍</button>
         <button className="hover:text-blue-500">⚙️</button>
         <button className="hover:text-blue-500">❓</button>
