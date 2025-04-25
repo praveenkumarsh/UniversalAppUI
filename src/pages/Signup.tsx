@@ -9,11 +9,12 @@ export default function Signup() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [username, setUserName] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await signup(email, password);
+      await signup(email, username, password);
       navigate("/");
     } catch (error) {
       alert("Signup failed");
@@ -39,6 +40,14 @@ export default function Signup() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="Email"
+            className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            required
+          />
+          <input
+            type="text"
+            value={username}
+            onChange={(e) => setUserName(e.target.value)}
+            placeholder="UserName"
             className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
             required
           />

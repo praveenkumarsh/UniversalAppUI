@@ -3,6 +3,7 @@ import ShortURL from "../dashboard/ShortURL";
 import DropBox from "../dashboard/DropBox";
 import Chat from "../dashboard/Chat";
 import PasteBin from "../dashboard/PasteBin";
+import Profile from "../dashboard/Profile";
 
 type Props = {
   selectedApp: { name: string; icon: string } | null;
@@ -21,6 +22,8 @@ const Dashboard: React.FC<Props> = ({ selectedApp }) => {
         return <PasteBin />;
       case "ShortURL":
         return <ShortURL />;
+      case "Profile":
+        return <Profile />;
       default:
         return (
           <div className="p-6 text-gray-500 text-center">

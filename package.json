@@ -10,9 +10,11 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@headlessui/react": "^2.2.2",
     "@heroicons/react": "^2.2.0",
     "@react-router/node": "^7.5.0",
     "@react-router/serve": "^7.5.0",
+    "axios": "^1.8.4",
     "isbot": "^5.1.17",
     "lucide-react": "^0.488.0",
     "react": "^19.0.0",

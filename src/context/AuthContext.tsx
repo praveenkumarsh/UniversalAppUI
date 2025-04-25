@@ -1,14 +1,14 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
+import { config } from "../config";
 
 interface User {
   token: string;
-  email: string;
 }
 
 interface AuthContextType {
   user: User | null;
   login: (email: string, password: string) => Promise<void>;
-  signup: (email: string, password: string) => Promise<void>;
+  signup: (email: string, username: string, password: string) => Promise<void>;
   logout: () => void;
   loginWithGoogle: () => Promise<void>;
 }
@@ -16,7 +16,12 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const GOOGLE_CLIENT_ID = `${config.googleClientId}`;
+const REDIRECT_URI = `${config.googleRedirectUri}`;
+const AUTH_URI = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${GOOGLE_CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=code&scope=openid%20email%20profile&access_type=offline&prompt=consent`;
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+
   const [user, setUser] = useState<User | null>(null);
 
   // Auto-login using localStorage
@@ -28,45 +33,58 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const loginWithGoogle = async () => {
-    return new Promise<void>((resolve) => {
-      setTimeout(() => {
-        const dummyUser = {
-          token: "google-dummy-token",
-          email: "googleuser@example.com",
-        };
-        setUser(dummyUser);
-        localStorage.setItem("auth", JSON.stringify(dummyUser));
-        resolve();
-      }, 1000);
-    });
+    window.location.href = AUTH_URI;
   };
 
-  // Dummy login function
   const login = async (email: string, password: string) => {
-    return new Promise<void>((resolve, reject) => {
-      setTimeout(() => {
-        if (email === "test@example.com" && password === "password") {
-          const dummyUser = { token: "dummy-token", email };
-          setUser(dummyUser);
-          localStorage.setItem("auth", JSON.stringify(dummyUser));
-          resolve();
-        } else {
-          reject(new Error("Invalid email or password"));
-        }
-      }, 1000); // Simulate network delay
-    });
+    try {
+      const res = await fetch(`${config.backendUrl}/api/auth/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
+      });
+  
+      if (!res.ok) {
+        const errMsg = await res.text();
+        throw new Error(errMsg || "Login failed");
+      }
+  
+      const data = await res.json();
+  
+      const user = {
+        token: data.token
+      };
+  
+      setUser(user);
+      localStorage.setItem("auth", JSON.stringify(user));
+    } catch (error) {
+      throw error;
+    }
   };
 
-  // Dummy signup function
-  const signup = async (email: string, password: string) => {
-    return new Promise<void>((resolve) => {
-      setTimeout(() => {
-        const dummyUser = { token: "dummy-token", email };
-        setUser(dummyUser);
-        localStorage.setItem("auth", JSON.stringify(dummyUser));
-        resolve();
-      }, 1000); // Simulate network delay
+  const signup = async (email: string, username: string, password: string) => {
+    const res = await fetch(`${config.backendUrl}/api/auth/register`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email, username, password }),
     });
+
+    console.log("Signup response:", res);
+    if (!res.ok) {
+      const error = await res.text();
+      throw new Error(error || "Signup failed");
+    }
+
+    // const data = await res.json();
+    // const user = { token: data.token }; 
+
+    // if (data.token) {
+    //   localStorage.setItem("auth", JSON.stringify(user));
+    // }
   };
 
   const logout = () => {

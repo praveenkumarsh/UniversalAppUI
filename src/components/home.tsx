@@ -15,6 +15,10 @@ const Home: React.FC = () => {
   // Auto-select app based on URL path
   useEffect(() => {
     const path = location.pathname.slice(1); // removes "/"
+    if("dashboard/profile" === path) {
+      setSelectedApp({ name: "Profile", icon: "👤" });
+      return;
+    }
     const matchedApp = apps.find((app) => app.name.toLowerCase() === path);
     if (matchedApp) {
       setSelectedApp(matchedApp);
