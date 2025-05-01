@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useTheme } from "../../context/ThemeContext";
+import { config } from "../../config";
 
 export default function PasteBin() {
   const { theme } = useTheme();
@@ -12,31 +13,28 @@ export default function PasteBin() {
   const [fileName, setFileName] = useState("My script.php");
   const [pastes, setPastes] = useState([]);
 
+  const token = JSON.parse(localStorage.getItem("auth") || "{}")?.token;
+
+  const [editingPaste, setEditingPaste] = useState(null);
+
   useEffect(() => {
-    const mockPastes = [
-      {
-        id: "abc123",
-        text: "console.log('Hello World');",
-        expiry: "1 Day",
-        privacy: "Public",
-        syntax: "JavaScript",
-        fileName: "hello.js",
-        link: "https://paste.ly/abc123",
-        createdAt: "2025-04-15 10:30 AM",
+    fetch(`${config.backendUrl}/api/paste`, {
+      headers: {
+        Authorization: `Bearer ${token}`, // or use your auth mechanism
       },
-      {
-        id: "def456",
-        text: "print('Hello Python')",
-        expiry: "Never",
-        privacy: "Private",
-        syntax: "Python",
-        fileName: "script.py",
-        link: "https://paste.ly/def456",
-        createdAt: "2025-04-14 09:00 PM",
-      },
-    ];
-    setPastes(mockPastes);
-  }, []);
+    })
+      .then((res) => res.json())
+      .then((data) => setPastes(data))
+      .catch(() => setError("Failed to load pastes."));
+  }, []);  
+
+  const expiryToDuration = {
+    "Never": null,
+    "10 Minutes": "PT10M",
+    "1 Hour": "PT1H",
+    "1 Day": "P1D",
+    "1 Week": "P7D",
+  };  
 
   const handleGeneratePaste = () => {
     if (!pasteText.trim()) {
@@ -44,25 +42,98 @@ export default function PasteBin() {
       setPasteLink("");
       return;
     }
-
-    setError("");
-    const pasteId = Math.random().toString(36).substring(2, 10);
-    const newLink = `https://paste.ly/${pasteId}`;
-    const newPaste = {
-      id: pasteId,
-      text: pasteText,
-      expiry,
-      privacy,
-      syntax,
-      fileName,
-      link: newLink,
-      createdAt: new Date().toLocaleString(),
+    
+    const requestBody = {
+      title: fileName,
+      content: pasteText,
+      language: syntax,
+      visibility: privacy.toUpperCase(),
+      password: "",
+      expiration: expiryToDuration[expiry],
     };
 
-    setPastes([newPaste, ...pastes]);
-    setPasteLink(newLink);
-    setPasteText("");
+    fetch(`${config.backendUrl}/api/paste`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`, // If required
+      },
+      body: JSON.stringify(requestBody),
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to create paste");
+        return res.json();
+      })
+      .then((data) => {
+        setPasteLink(`${window.location.origin}/paste/${data.key}`);
+        setPasteText("");
+        setPastes((prev) => [data, ...prev]);
+      })
+      .catch((err) => {
+        setError(err.message || "Error creating paste");
+      });
+  };  
+
+  const handleDeletePaste = (key) => {
+    if (!confirm("Are you sure you want to delete this paste?")) return;
+  
+    fetch(`${config.backendUrl}/api/paste/${key}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("Delete failed");
+        setPastes((prev) => prev.filter((p) => p.key !== key));
+        if (editingPaste?.key === key) {
+          setEditingPaste(null);
+          setPasteText("");
+        }
+      })
+      .catch(() => alert("Failed to delete paste"));
   };
+
+  const handleUpdatePaste = () => {
+    if (!pasteText.trim()) {
+      setError("Paste content cannot be empty.");
+      return;
+    }
+  
+    const requestBody = {
+      title: fileName,
+      content: pasteText,
+      language: syntax,
+      visibility: privacy.toUpperCase(),
+      password: "",
+      expiration: expiryToDuration[expiry],
+    };
+  
+    fetch(`${config.backendUrl}/api/paste/${editingPaste.key}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(requestBody),
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to update paste");
+        return res.json();
+      })
+      .then((data) => {
+        setPastes((prev) =>
+          prev.map((p) => (p.key === editingPaste.key ? data : p))
+        );
+        setPasteLink(`${window.location.origin}/paste/${data.key}`);
+        setPasteText("");
+        setEditingPaste(null);
+      })
+      .catch((err) => {
+        setError(err.message || "Error updating paste");
+      });
+  };  
+  
 
   const isDark = theme === "dark";
 
@@ -125,12 +196,28 @@ export default function PasteBin() {
           {/* Submit + Link */}
           <div>
             {error && <p className="text-red-500 text-sm mb-2">{error}</p>}
-            <button
+            {/* <button
               onClick={handleGeneratePaste}
               className="bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-2 rounded-xl transition text-sm font-semibold"
             >
-              Create Paste
+              {editingPaste ? "Update Paste" : "Create Paste"}
+            </button> */}
+
+            <button
+              onClick={editingPaste ? handleUpdatePaste : handleGeneratePaste}
+              className="bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-2 rounded-xl transition text-sm font-semibold"
+            >
+              {editingPaste ? "Update Paste" : "Create Paste"}
             </button>
+
+
+            {/* <button
+              onClick={handleSubmitPaste}
+              className="bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-2 rounded-xl transition text-sm font-semibold"
+            >
+              {editingPaste ? "Update Paste" : "Create Paste"}
+            </button> */}
+
 
             {pasteLink && (
               <div className="mt-4 text-sm">
@@ -156,28 +243,59 @@ export default function PasteBin() {
               {pastes.map((paste) => (
                 <li
                   key={paste.id}
-                  className={`rounded-2xl p-4 shadow-sm ${
+                  className={`rounded-2xl p-4 shadow-sm relative ${
                     isDark ? "bg-gray-700 text-gray-100 border border-gray-600" : "bg-white text-gray-900 border border-gray-200"
                   }`}
                 >
-                  <div className="flex justify-between items-center mb-1">
-                    <span className="font-medium">{paste.fileName}</span>
-                    <span className="text-xs opacity-70">{paste.createdAt}</span>
+                  {/* Edit/Delete Buttons */}
+                  <div className="absolute top-2 right-2 flex gap-1">
+                    <button
+                      onClick={() => {
+                        setEditingPaste(paste);
+                        setPasteText(paste.content);
+                        setFileName(paste.title);
+                        setPrivacy(paste.visibility);
+                        setSyntax(paste.language);
+                        const matchedExpiry = Object.entries(expiryToDuration).find(
+                          ([, val]) => val === paste.expiration
+                        );
+                        setExpiry(matchedExpiry ? matchedExpiry[0] : "Never");
+                        window.scrollTo({ top: 0, behavior: "smooth" });
+                      }}
+                      className="text-xs px-2 py-0.5 bg-blue-500 hover:bg-blue-600 text-white rounded"
+                    >
+                      ✏️
+                    </button>
+                    <button
+                      onClick={() => handleDeletePaste(paste.key)}
+                      className="text-xs px-2 py-0.5 bg-red-500 hover:bg-red-600 text-white rounded"
+                    >
+                      🗑️
+                    </button>
                   </div>
+
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="font-medium">{paste.title}</span>
+                    {/* <span className="text-xs opacity-70">{new Date(paste.createdAt).toLocaleString()}</span> */}
+                  </div>
+
                   <div className="text-emerald-400 truncate">
                     <a
-                      href={paste.link}
+                      href={`${window.location.origin}/paste/${paste.key}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="hover:underline"
                     >
-                      {paste.link}
+                      {`${window.location.origin}/paste/${paste.key}`}
                     </a>
                   </div>
+
                   <div className="text-xs mt-1 opacity-70">
-                    {paste.syntax} • {paste.privacy} • Expires: {paste.expiry}
+                    {paste.language} • {paste.visibility} • Expires:{" "}
+                    {paste.expiresAt ? new Date(paste.expiresAt).toLocaleString() : "Never"}
                   </div>
                 </li>
+                            
               ))}
             </ul>
           ) : (
