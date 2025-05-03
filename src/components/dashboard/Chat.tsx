@@ -12,7 +12,7 @@ interface OnlineUser {
 }
 
 interface WebSocketIncomingMessage {
-  type: 'heartbeat' | 'presence' | 'error';
+  type: 'heartbeat' | 'offline' | 'error' | 'chat';
   users?: OnlineUser[];
   message?: string;
 }
@@ -74,6 +74,23 @@ export default function ChatPage() {
       });
   
       if (!res.ok) throw new Error("Failed to send message");
+
+      // const websocket = new WebSocket(`${config.backendUrl}/chatapp?token=${user.token}`);
+      // websocket.onopen = () => {
+      //   console.log('WebSocket connected');
+      //   setWs(websocket);
+      //   const sendMessageToWebhook = () => {
+      //     websocket.send(JSON.stringify({
+      //       type: 'chat',
+      //       from: user.name,
+      //       to: selectedUser.name,
+      //       message: message,
+      //       clientId
+      //     }));
+      //   };
+    
+      //   sendMessageToWebhook();
+      // };
   
       setMessage("");
       setAttachment(null);
@@ -90,7 +107,7 @@ export default function ChatPage() {
   useEffect(() => {
     if (!user?.token) return;
   
-    const websocket = new WebSocket(`${config.backendUrl}/presence?token=${user.token}`);
+    const websocket = new WebSocket(`${config.backendUrl}/chatapp?token=${user.token}`);
     let interval: NodeJS.Timeout;
   
     websocket.onopen = () => {
@@ -112,11 +129,16 @@ export default function ChatPage() {
       const message: WebSocketIncomingMessage = JSON.parse(event.data);
       console.log('Received message:', message);
       switch (message.type) {
-        case 'presence':
+        case 'heartbeat':
+        case 'offline':
           if (message.users) setOnlineUsers(message.users);
           break;
         case 'error':
           console.error('WebSocket error:', message.message);
+          break;
+        case 'chat':
+          const parsed: ChatMessage = JSON.parse(message.message);
+          setMessages((prev) => [...prev, parsed]);
           break;
       }
     };
