@@ -1,37 +1,144 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Paperclip } from "lucide-react";
 import { useTheme } from "../../context/ThemeContext";
+import { useAuth } from "../../context/AuthContext";
+import { v4 as uuidv4 } from "uuid";
+import { config } from "../../config";
+
+interface OnlineUser {
+  id: string;
+  name: string;
+  email: string;
+}
+
+interface WebSocketIncomingMessage {
+  type: 'heartbeat' | 'presence' | 'error';
+  users?: OnlineUser[];
+  message?: string;
+}
+
+interface ChatMessage {
+  sender: string;
+  text: string;
+  attachment?: string | null;
+  fileName?: string | null;
+  timestamp: number; // Add timestamp field
+}
 
 export default function ChatPage() {
   const [message, setMessage] = useState("");
   const [attachment, setAttachment] = useState<File | null>(null);
-  const [messages, setMessages] = useState([
-    { sender: "Alice", text: "Hey, how’s it going?" },
-    { sender: "You", text: "All good! Working on that new feature." },
-    { sender: "Alice", text: "Nice, keep it up!" },
-  ]);
-  const onlineUsers = ["Alice", "Bob", "Charlie"];
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [onlineUsers, setOnlineUsers] = useState<OnlineUser[]>([]);
+  const [selectedUser, setSelectedUser] = useState<OnlineUser | null>(null);
+  const [ws, setWs] = useState<WebSocket | null>(null);
+  const { user } = useAuth();
   const { theme } = useTheme();
+  const clientId = uuidv4();
 
-  const handleSend = () => {
-    if (!message.trim() && !attachment) return;
+  const fetchMessages = useCallback(async () => {
+    if (!selectedUser || !user?.token) return;
+  
+    try {
+      const res = await fetch(`${config.backendUrl}/api/chat/messages?with=${selectedUser.id}`, {
+        headers: {
+          Authorization: `Bearer ${user.token}`,
+        },
+      });
+      if (!res.ok) throw new Error("Failed to fetch messages");
+      const data = await res.json();
+      setMessages(data);
+    } catch (error) {
+      console.error("Error fetching messages:", error);
+    }
+  }, [selectedUser, user?.token]); 
 
-    const newMsg = {
-      sender: "You",
+  const handleSend = async () => {
+    if (!message.trim() || !selectedUser || !user?.token) return;
+  
+    const payload = {
       text: message,
-      attachment: attachment ? URL.createObjectURL(attachment) : null,
-      fileName: attachment?.name || null,
+      receiverId: selectedUser.id,
+      fileName: attachment?.name ?? null,
+      attachment: null, // optional: add file upload logic if needed
     };
-
-    setMessages([...messages, newMsg]);
-    setMessage("");
-    setAttachment(null);
+  
+    try {
+      const res = await fetch(`${config.backendUrl}/api/chat/send`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${user.token}`,
+        },
+        body: JSON.stringify(payload),
+      });
+  
+      if (!res.ok) throw new Error("Failed to send message");
+  
+      setMessage("");
+      setAttachment(null);
+      fetchMessages(); // Refresh messages
+    } catch (err) {
+      console.error("Send error:", err);
+    }
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      setAttachment(e.target.files[0]);
-    }
+  useEffect(() => {
+    fetchMessages();
+  }, [fetchMessages]);  
+
+  useEffect(() => {
+    if (!user?.token) return;
+  
+    const websocket = new WebSocket(`${config.backendUrl}/presence?token=${user.token}`);
+    let interval: NodeJS.Timeout;
+  
+    websocket.onopen = () => {
+      console.log('WebSocket connected');
+      setWs(websocket);
+  
+      const sendHeartbeat = () => {
+        websocket.send(JSON.stringify({
+          type: 'heartbeat',
+          clientId
+        }));
+      };
+  
+      sendHeartbeat(); // Initial
+      interval = setInterval(sendHeartbeat, 25000);
+    };
+  
+    websocket.onmessage = (event) => {
+      const message: WebSocketIncomingMessage = JSON.parse(event.data);
+      console.log('Received message:', message);
+      switch (message.type) {
+        case 'presence':
+          if (message.users) setOnlineUsers(message.users);
+          break;
+        case 'error':
+          console.error('WebSocket error:', message.message);
+          break;
+      }
+    };
+
+    websocket.onclose = () => {
+      console.log('WebSocket disconnected');
+      setWs(null);
+      clearInterval(interval);
+    };
+
+    return () => {
+      clearInterval(interval);
+      websocket.close();
+      websocket.send(JSON.stringify({
+        type: 'offline',
+        clientId
+      }));
+    };
+  }, [user?.token]);
+
+  const formatTimestamp = (timestamp: number) => {
+    return new Date(timestamp).toLocaleDateString() + " " + new Date(timestamp).toLocaleTimeString();
   };
 
   return (
@@ -48,19 +155,10 @@ export default function ChatPage() {
                 className={`flex ${msg.sender === "You" ? "justify-end" : "justify-start"}`}
               >
                 <div
-                  className={`max-w-sm rounded-2xl shadow p-3 text-sm ${
-                    msg.sender === "You"
-                      ? theme === "dark"
-                        ? "bg-emerald-600 text-white"
-                        : "bg-emerald-500 text-white"
-                      : theme === "dark"
-                        ? "bg-gray-800 border border-gray-700"
-                        : "bg-white border"
-                  }`}
+                  className={`max-w-sm rounded-2xl shadow p-3 text-sm ${msg.sender === "You" ? (theme === "dark" ? "bg-emerald-600 text-white" : "bg-emerald-500 text-white") : (theme === "dark" ? "bg-gray-800 border border-gray-700" : "bg-white border")}`}
                 >
-                  <p className="text-xs mb-1 opacity-70">
-                    {msg.sender}
-                  </p>
+                  <p className="text-xs mb-1 opacity-70">{msg.sender === user.id ? "You" : msg.sender}</p>
+
                   {msg.text && <p className="mb-1">{msg.text}</p>}
                   {msg.attachment && (
                     <a
@@ -72,6 +170,8 @@ export default function ChatPage() {
                       📎 {msg.fileName}
                     </a>
                   )}
+                  
+                  <p className="text-xs mt-1 text-white-500">{formatTimestamp(msg.timestamp)}</p> {/* Timestamp */}
                 </div>
               </div>
             ))}
@@ -82,7 +182,6 @@ export default function ChatPage() {
             <div className="flex items-center gap-2">
               <label className={`cursor-pointer flex items-center justify-center p-3 rounded-xl transition ${theme === "dark" ? "bg-gray-700 hover:bg-gray-600" : "bg-gray-200 hover:bg-gray-300"}`}>
                 <Paperclip size={18} />
-                <input type="file" className="hidden" onChange={handleFileChange} />
               </label>
 
               <input
@@ -111,16 +210,16 @@ export default function ChatPage() {
 
         {/* Online Users */}
         <aside className={`w-80 border-l p-6 overflow-y-auto ${theme === "dark" ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"}`}>
-          <h3 className="text-base font-semibold mb-4">
-            👥 Online Users
-          </h3>
+          <h3 className="text-base font-semibold mb-4">👥 Online Users</h3>
           <ul className="space-y-3 text-sm">
             {onlineUsers.map((user) => (
               <li
-                key={user}
-                className={`rounded-2xl p-3 shadow-sm ${theme === "dark" ? "bg-gray-700 text-gray-100" : "bg-gray-50 text-gray-800"}`}
+                key={user.id}
+                onClick={() => setSelectedUser(user)}
+                className={`cursor-pointer rounded-2xl p-3 shadow-sm ${theme === "dark" ? "bg-gray-700 text-gray-100" : "bg-gray-50 text-gray-800"} ${selectedUser?.id === user.id ? "ring-2 ring-emerald-500" : ""}`}
               >
-                <span className="text-emerald-500 font-medium">{user}</span>
+                <div className="text-emerald-500 font-medium">{user.name}</div>
+                <div className="text-xs text-gray-400">{user.email}</div>
               </li>
             ))}
           </ul>
