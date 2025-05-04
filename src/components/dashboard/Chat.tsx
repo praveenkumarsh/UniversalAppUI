@@ -31,10 +31,26 @@ export default function ChatPage() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [onlineUsers, setOnlineUsers] = useState<OnlineUser[]>([]);
   const [selectedUser, setSelectedUser] = useState<OnlineUser | null>(null);
+  const [recentUsers, setRecentUsers] = useState<OnlineUser[]>([]);
   const [ws, setWs] = useState<WebSocket | null>(null);
   const { user } = useAuth();
   const { theme } = useTheme();
   const clientId = uuidv4();
+
+  const fetchRecentUsers = useCallback(async () => {
+    try {
+      const res = await fetch(`${config.backendUrl}/api/chat/recent-users`, {
+        headers: {
+          Authorization: `Bearer ${user.token}`,
+        },
+      });
+      if (!res.ok) throw new Error("Failed to fetch recent users");
+      const data = await res.json();
+      setRecentUsers(data);
+    } catch (err) {
+      console.error("Error fetching recent users:", err);
+    }
+  }, [recentUsers, user?.token]); // Add user.token as a dependency
 
   const fetchMessages = useCallback(async () => {
     if (!selectedUser || !user?.token) return;
@@ -102,6 +118,7 @@ export default function ChatPage() {
 
   useEffect(() => {
     fetchMessages();
+    fetchRecentUsers();
   }, [fetchMessages]);  
 
   useEffect(() => {
@@ -241,9 +258,24 @@ export default function ChatPage() {
 
         {/* Online Users */}
         <aside className={`w-80 border-l p-6 overflow-y-auto ${theme === "dark" ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"}`}>
-          <h3 className="text-base font-semibold mb-4">👥 Online Users</h3>
+        <h3 className="text-base font-semibold mb-4">👥 Online Users</h3>
           <ul className="space-y-3 text-sm">
             {onlineUsers.map((user) => (
+              <li
+                key={user.id}
+                onClick={() => setSelectedUser(user)}
+                className={`cursor-pointer rounded-2xl p-3 shadow-sm ${theme === "dark" ? "bg-gray-700 text-gray-100" : "bg-gray-50 text-gray-800"} ${selectedUser?.id === user.id ? "ring-2 ring-emerald-500" : ""}`}
+              >
+                <div className="text-emerald-500 font-medium">{user.name}</div>
+                <div className="text-xs text-gray-400">{user.email}</div>
+              </li>
+            ))}
+          </ul>
+          <br></br>
+
+          <h3 className="text-base font-semibold mb-4">🕓 Recent Chats</h3>
+          <ul className="space-y-3 text-sm mb-6">
+            {recentUsers.map((user) => (
               <li
                 key={user.id}
                 onClick={() => setSelectedUser(user)}
