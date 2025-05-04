@@ -5,6 +5,7 @@ import {
   LayoutGrid,
   FileSpreadsheet,
   Folder,
+  RotateCcw
 } from "lucide-react";
 import { useTheme } from "../../context/ThemeContext";
 import { config } from "../../config";
@@ -91,7 +92,7 @@ export default function DropBox() {
       });
 
       const message = await res.text();
-      alert(message);
+      alert("Uploaded file : " + message);
       fetchFiles();
     } catch (error) {
       alert("Upload failed");
@@ -153,6 +154,27 @@ export default function DropBox() {
     }
   };
 
+  const handleRestore = async () => {
+    for (const fileName of selected) {
+      try {
+        await fetch(
+          `${config.backendUrl}/api/files/${encodeURIComponent(fileName)}/restore`,
+          {
+            method: "PUT",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+      } catch (e) {
+        alert(`Failed to restore ${fileName}`);
+      }
+    }
+    setSelected([]);
+    fetchFiles();
+  };
+  
+
   const handleDownload = async () => {
     for (const fileName of selected) {
 
@@ -202,9 +224,14 @@ export default function DropBox() {
           >
             <div className="flex gap-4">
               {view === "recycleBin" ? (
-                <button onClick={handlePermanentDelete} className="flex items-center gap-1 hover:text-red-400">
-                  <Trash2 size={16} /> Delete Permanently
-                </button>
+                <>
+                  <button onClick={handlePermanentDelete} className="flex items-center gap-1 text-sm text-red-500 hover:text-red-600">
+                    <Trash2 size={16} /> Delete Permanently
+                  </button>
+                  <button onClick={handleRestore} className="flex items-center gap-1 text-sm text-blue-500 hover:text-blue-600">
+                    <RotateCcw size={16} /> Restore
+                  </button>
+                </>              
               ) : (
                 <>
                   <button onClick={handleDelete} className="flex items-center gap-1 hover:text-red-400">
