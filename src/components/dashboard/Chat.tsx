@@ -75,22 +75,22 @@ export default function ChatPage() {
   
       if (!res.ok) throw new Error("Failed to send message");
 
-      // const websocket = new WebSocket(`${config.backendUrl}/chatapp?token=${user.token}`);
-      // websocket.onopen = () => {
-      //   console.log('WebSocket connected');
-      //   setWs(websocket);
-      //   const sendMessageToWebhook = () => {
-      //     websocket.send(JSON.stringify({
-      //       type: 'chat',
-      //       from: user.name,
-      //       to: selectedUser.name,
-      //       message: message,
-      //       clientId
-      //     }));
-      //   };
+      const websocket = new WebSocket(`${config.backendUrl}/chatapp?token=${user.token}`);
+      websocket.onopen = () => {
+        console.log('WebSocket connected');
+        setWs(websocket);
+        const sendMessageToWebhook = () => {
+          websocket.send(JSON.stringify({
+            type: 'chat',
+            from: user.name,
+            to: selectedUser.id,
+            message: message,
+            clientId
+          }));
+        };
     
-      //   sendMessageToWebhook();
-      // };
+        sendMessageToWebhook();
+      };
   
       setMessage("");
       setAttachment(null);
@@ -137,9 +137,18 @@ export default function ChatPage() {
           console.error('WebSocket error:', message.message);
           break;
         case 'chat':
-          const parsed: ChatMessage = JSON.parse(message.message);
-          setMessages((prev) => [...prev, parsed]);
-          break;
+          // const parsed: ChatMessage = JSON.parse(message);
+          const parsed: ChatMessage = message;
+          console.log('Parsed message:', parsed);
+          console.log('User ID:', user.id);
+          if (parsed.to !== user.id) {
+            setMessages((prev) => [...prev, parsed]);
+            console.log('Message for this user:', parsed);
+          } else {
+            console.log('Message not for this user:', parsed);
+          }
+          // setMessages((prev) => [...prev, parsed]);
+          // break;
       }
     };
 
