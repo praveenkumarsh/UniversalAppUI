@@ -8,6 +8,7 @@ import AuthRedirector from "./components/helpers/AuthRedirector";
 import OAuthSuccess from "./pages/OAuthSuccess";
 import Profile from "./components/dashboard/Profile";
 import ViewPaste from "./components/dashboard/ViewPaste";
+import RedirectShortUrl from "./components/dashboard/RedirectShortUrl";
 
 export default function App() {
   return (
@@ -21,6 +22,7 @@ export default function App() {
         {/* <Route path="/" element={<Home />} /> */}
         <Route path="/signup" element={<Signup />} />
         <Route path="/paste/:key" element={<ViewPaste />} />
+        <Route path="/shorturl/:shortCode" element={<RedirectShortUrl />} />
         <Route
           path="/:app?"
           element={

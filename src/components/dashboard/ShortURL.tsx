@@ -155,7 +155,7 @@ export default function ShortURL() {
               className="w-full border border-gray-300 p-3 rounded-lg mb-4 text-sm"
             />
             <div className="flex items-center gap-4 mb-4">
-              <span className="text-sm text-gray-600 font-medium">{config.backendUrl}/</span>
+              <span className="text-sm text-gray-600 font-medium">{window.location.href}/</span>
               <input
                 value={customAlias}
                 onChange={(e) => setCustomAlias(e.target.value)}
@@ -199,12 +199,16 @@ export default function ShortURL() {
                   className="border border-white/20 rounded-2xl p-4 bg-white/10 backdrop-blur-md shadow-sm"
                 >
                   <div className="flex justify-between items-center mb-1">
-                    <span className="text-white font-medium truncate"><a
-                        href={url.short}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >{url.short}</a>
-                    </span>
+                  <span className="text-white font-medium truncate">
+                    <a
+                      href={`${window.location.href}/${url.short}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="hover:underline"
+                    >
+                      {`${window.location.href}/${url.short}`}
+                    </a>
+                  </span>
                     <button
                       onClick={() => handleDelete(url.id)}
                       className="text-red-400 text-xs hover:underline"
