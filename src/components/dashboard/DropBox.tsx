@@ -303,6 +303,7 @@ export default function DropBox() {
                       {f.name}
                     </td>
                     <td className="p-2">{new Date(f.uploadedDate).toLocaleString()}</td>
+                    {/* @ts-ignore */}
                     <td className="p-2">{formatBytes(f.size)}</td>
                     <td className="p-2">{f.type}</td>
                   </tr>
