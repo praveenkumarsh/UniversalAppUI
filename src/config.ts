@@ -1,5 +1,6 @@
 // src/config.ts
 export const config = {
+  webhookUrl: import.meta.env.VITE_WEBHOOK_BACKEND_URL,
   backendUrl: import.meta.env.VITE_BACKEND_URL,
   googleClientId: import.meta.env.VITE_GOOGLE_CLIENT_ID,
   googleRedirectUri: `${import.meta.env.VITE_BACKEND_URL}${import.meta.env.VITE_GOOGLE_REDIRECT_URI}`,
