@@ -112,7 +112,7 @@ export default function ShortURL() {
       };
   
       setRecentUrls([newEntry, ...recentUrls]);
-      setShortLink(data.shortUrl);
+      setShortLink(`${window.location.href}/${newEntry.id}`);
       setLongUrl("");
       setCustomAlias("");
     } catch (err) {
