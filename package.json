@@ -12,6 +12,7 @@
   "dependencies": {
     "@headlessui/react": "^2.2.2",
     "@heroicons/react": "^2.2.0",
+    "@monaco-editor/react": "^4.7.0",
     "@react-router/node": "^7.5.0",
     "@react-router/serve": "^7.5.0",
     "@stomp/stompjs": "^7.1.1",

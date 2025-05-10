@@ -9,6 +9,7 @@ import OAuthSuccess from "./pages/OAuthSuccess";
 import Profile from "./components/dashboard/Profile";
 import ViewPaste from "./components/dashboard/ViewPaste";
 import RedirectShortUrl from "./components/dashboard/RedirectShortUrl";
+import OnlineCodeExecuter from "./components/dashboard/OnlineCodeExecuter";
 
 export default function App() {
   return (
@@ -21,6 +22,7 @@ export default function App() {
         <Route path="/oauth-success" element={<OAuthSuccess />} />
         {/* <Route path="/" element={<Home />} /> */}
         <Route path="/signup" element={<Signup />} />
+        <Route path="/onlinecompiler" element={<OnlineCodeExecuter />} />
         <Route path="/paste/:key" element={<ViewPaste />} />
         <Route path="/shorturl/:shortCode" element={<RedirectShortUrl />} />
         <Route
