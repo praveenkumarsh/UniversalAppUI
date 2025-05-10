@@ -5,9 +5,10 @@ export interface AppConfig {
     path: string;
   }
   
-  export const apps: AppConfig[] = [
-    { name: "Dropbox", icon: "📁", path: "dropbox" },
-    { name: "Chat", icon: "💬", path: "chat" },
-    { name: "PasteBin", icon:  "📋", path: "pastebin" },
-    { name: "ShortURL", icon: "🔗", path: "shorturl" }
-  ];
+export const apps: AppConfig[] = [
+  { name: "Dropbox", icon: "📁", path: "dropbox" },
+  { name: "Chat", icon: "💬", path: "chat" },
+  { name: "PasteBin", icon:  "📋", path: "pastebin" },
+  { name: "ShortURL", icon: "🔗", path: "shorturl" },
+  { name: "OnlineCompiler", icon: "🖥️", path: "onlinecompiler" }
+];
