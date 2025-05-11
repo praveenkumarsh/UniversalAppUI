@@ -91,7 +91,7 @@ export default function ChatPage() {
   
       if (!res.ok) throw new Error("Failed to send message");
 
-      const websocket = new WebSocket(`${config.backendUrl}:8080/chatapp?token=${user.token}`);
+      const websocket = new WebSocket(`${config.webhookUrl}/chatapp?token=${user.token}`);
       websocket.onopen = () => {
         console.log('WebSocket connected');
         setWs(websocket);
@@ -125,7 +125,7 @@ export default function ChatPage() {
   useEffect(() => {
     if (!user?.token) return;
   
-    const websocket = new WebSocket(`${config.webhookUrl}chatapp?token=${user.token}`);
+    const websocket = new WebSocket(`${config.webhookUrl}/chatapp?token=${user.token}`);
     let interval: NodeJS.Timeout;
   
     websocket.onopen = () => {
